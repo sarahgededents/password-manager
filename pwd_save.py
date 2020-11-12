@@ -3,16 +3,19 @@ import string
 
 from Crypto.Cipher import AES
 
+def generate_random_string(charset, length):
+    chars = [secrets.choice(charset) for _ in range(length)]
+    secrets.SystemRandom().shuffle(chars)
+    return ''.join(chars)
+
 def generate_password(length):
-    string_char = string.ascii_letters + string.digits + string.punctuation
-    pwd = secrets.choice(string_char)
-    while len(pwd) != length:
-        pwd += secrets.choice(string_char)
+    charset = string.ascii_letters + string.digits + string.punctuation
+    return generate_random_string(charset, length)
+
+def generate_captcha_string():
+    charset = string.ascii_lowercase + string.digits + "%#&?*!^@=<>+"
+    return generate_random_string(charset, length=6)
     
-    char_list = list(pwd)
-    secrets.SystemRandom().shuffle(char_list)
-    pwd = ''.join(char_list)
-    return pwd
 
 def pad(key, lengths=(16,24,32)):
     if len(key) in lengths:

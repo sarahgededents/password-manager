@@ -1,11 +1,13 @@
 import tkinter as tk
 import tkinter.simpledialog
 from tkinter import ttk
-from pwd_save import generate_password, Encryption
+from pwd_save import generate_password, Encryption, generate_captcha_string
 from collections import namedtuple
 from interface import DatabaseManager
 import center_tk_window
 import webbrowser
+from captcha.image import ImageCaptcha
+from PIL import ImageTk
 
 
 class PasswordGeneratorWidget(tk.Frame):
@@ -55,7 +57,7 @@ class PrivateEntry(tk.Frame):
         
 class ClipboardEntry(tk.Entry):
     def __init__(self, parent, *args, **kwargs):
-        tk.Entry.__init__(self, parent, *args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
         
         self.changes = [""]
         self.steps = int()
@@ -93,18 +95,23 @@ class ClipboardEntry(tk.Entry):
             self.delete(0, tk.END)
             self.insert(tk.END, self.changes[self.steps])
             self.steps += 1
-
+            
+class NamedEntry(tk.Frame):
+    def __init__(self, parent, name, *args, **kwargs):
+        super().__init__(parent)
+        tk.Label(self, text=name).pack(side=tk.LEFT)
+        ClipboardEntry(self, *args, **kwargs).pack(side=tk.LEFT)
 
 class Form(tk.Frame):
     class Field:
-        def __init__(self, form, uid, name, private=False, **kwargs):
+        def __init__(self, parent, uid, name, private=False, form=None, **kwargs):
             self.private = private
-            self.form = form
+            self.form = form if form is not None else parent
             self.uid = uid
             self.var = tk.StringVar()
-            self.label = tk.Label(form, text = name)
+            self.label = tk.Label(parent, text = name)
             entryType = PrivateEntry if self.private else ClipboardEntry
-            self.entry = entryType(form, width=38, textvariable=self.var)
+            self.entry = entryType(parent, width=38, textvariable=self.var)
             self.entry.bind("<Return>", self.on_return_pressed)
             #self.entry.bind("<Escape>", self.clear)
         
@@ -121,11 +128,16 @@ class Form(tk.Frame):
         self.encryption = encryption
         self.rowcount = 0
         self.fields = {}
+        
+        self.entry_frame = tk.Frame(self)
+        self.entry_frame.grid(row = 0, column = 0, columnspan = 4, pady=3)
+        
         for field_desc in field_descriptors:
             self.add_field(field_desc)
         self.submit_btn = tk.Button(self, text="Submit", command=self.on_submit_click)
         self.update_btn = tk.Button(self, text="Update", command=self.on_update_click)
         self.delete_btn = tk.Button(self, text="Delete", command=self.on_delete_click)
+        
         self.on_submit_callback = on_submit
         self.on_update_callback = on_update
         self.on_delete_callback = on_delete
@@ -138,7 +150,7 @@ class Form(tk.Frame):
         
         
     def add_field(self, field_descriptor):
-        field = Form.Field(self, **field_descriptor)
+        field = Form.Field(self.entry_frame, form=self, **field_descriptor)
         self.fields[field.uid] = field
         field.label.grid(row=self.rowcount, column=0)
         field.entry.grid(row=self.rowcount, column=1, columnspan=2, sticky=tk.W)
@@ -179,7 +191,6 @@ class Form(tk.Frame):
             else:
                 self._handle_error(result, title="Delete error")
             
-        
     def on_return_pressed(self, event=None):
         if self.db.exists(self.name.get()):
             self.on_update_click()
@@ -201,15 +212,41 @@ class Form(tk.Frame):
         if self.db.exists(self.name.get()):
             self.submit_btn.grid_forget()
             self.update_btn.grid(row=self.rowcount, column=1)
-            self.delete_btn.grid(row=self.rowcount, column=2)
+            self.delete_btn.grid(row=self.rowcount, column=3)
         else:
-            self.submit_btn.grid(row=self.rowcount, column=1, columnspan=2)
+            self.submit_btn.grid(row=self.rowcount, column=2)
             self.update_btn.grid_forget()
             self.delete_btn.grid_forget()
     
     def _limit_max_pwd_length(self, *args):
         if len(self.password.get()):
             self.password.set(self.password.get()[:32])
+
+
+class Captcha(tk.Frame):
+    def __init__(self, parent):
+        self.captcha = ImageCaptcha()
+        super().__init__(parent)
+        self.label = tk.Label(self)
+        self.entry = ClipboardEntry(self, width=10)
+        self.label.grid(row=0, column=0, columnspan=1)
+        self.entry.grid(row=1, column=0, columnspan=2)
+        
+        tk.Button(self, text="refresh", command=self.refresh).grid(row=0, column=5, columnspan=1, padx=2)
+        
+        self.refresh()
+    
+    def refresh(self):
+        self.result = generate_captcha_string()
+        image = self.captcha.generate_image(self.result)
+        self.image = ImageTk.PhotoImage(image)
+        self.label.configure(image=self.image)
+        self.entry.insert(0, self.result) # REMOVE ME
+    
+    def validate(self):
+        result = self.result == self.entry.get()
+        self.entry.delete(0, tk.END)
+        return result
 
 class MasterDialog(tk.simpledialog.Dialog):
     class Mode:
@@ -231,11 +268,20 @@ class MasterDialog(tk.simpledialog.Dialog):
             tk.Label(master, text="Confirm master password:").grid(row=2)
             self.entry2 = PrivateEntry(master, width=38)
             self.entry2.grid(row=3)
+            
+        if self.mode == MasterDialog.Mode.CHECK:
+            self.captcha = Captcha(master)
+            self.captcha.grid(row=2)
+
         self.label = tk.Label(master)    
         return self.entry
     
     def ok(self, event=None):
-        if not self.validate():           
+        if not self.validate():
+            self.label.grid(row=4)
+            if self.mode == MasterDialog.Mode.CHECK:
+                self.captcha.refresh()
+                self.entry.delete(0, tk.END)
             self.initial_focus.focus()
             return
             
@@ -261,18 +307,19 @@ class MasterDialog(tk.simpledialog.Dialog):
             self.encryption.key = self.entry.get()
     
     def validate(self):
-        if self.mode == MasterDialog.Mode.CHECK:           
-            if not self.db.check_master_pwd(self.entry.get()):
+        if self.mode == MasterDialog.Mode.CHECK:   
+            if not self.captcha.validate():
+                self.label.configure(text="Invalid captcha!")
+                return False
+            elif not self.db.check_master_pwd(self.entry.get()):
                 self.label.configure(text="Invalid password!")
-                self.label.grid(row=2)
-                self.entry.delete(0, tk.END)
                 return False
                 
         elif self.mode == MasterDialog.Mode.SET:
             if self.entry.get() != self.entry2.get():
                 self.label.configure(text="Passwords don't match!")
-                self.label.grid(row=4)
                 return False
+
         return True
 
     def _is_changing_password(self):
@@ -305,13 +352,12 @@ class RightClickMenu(tk.Menu):
 
             if f.get('can_copy', False) and is_decipherable:
                 name = f['name']
-                print(f)
                 self.add_command(label=f"Copy {name}", command=lambda f=f: self.copy_field(f))
         self.add_separator()
         for f in FIELDS:
             is_decipherable = not f.get('private', False) or callable(func_decipher_private)
             if f.get('can_goto', False) and is_decipherable:
-                name, cmd = f['name'], lambda: self.goto_field(f)
+                name, cmd = f['name'], lambda f=f: self.goto_field(f)
                 self.add_command(label=f"Go to {name}", command=cmd)
         self.add_separator()
         self.add_command(label="Delete", command=self.delete)
@@ -351,6 +397,9 @@ class TableView(ttk.Treeview):
 
     def __init__(self, parent, db, func_decipher_private=None):
         super().__init__(parent, columns=TableView.COLUMNS)
+        self.total_insert_call_count = 0
+        self.insert_order = {}
+        self.hidden = set()
         self.db = db
         for field in FIELDS:
             self.column(field['tree_column'], anchor=tk.CENTER, minwidth=50, width=0, stretch=tk.YES)
@@ -365,6 +414,45 @@ class TableView(ttk.Treeview):
         db.on_delete.append( self.delete )
         db.on_update.append( self.update_fields )
         
+    def delete(self, *items):
+        for item in items:
+            self.hidden.remove(item)
+        super().delete(*items)
+    
+    def show(self, item):
+        if item in self.hidden:
+            if self.exists(item):
+                # these should be above us since they were added after and we only prepend
+                visible_items_inserted_after = filter(lambda name: name not in self.hidden and self.insert_order[name] > self.insert_order[item], self.insert_order)
+                next_neighbour = min(visible_items_inserted_after, default=None, key=lambda name: self.insert_order[name]) # should be right above us
+                index = self.index(next_neighbour) + 1 if next_neighbour is not None else 0
+                self.reattach(item, '', index)
+                self.hidden.remove(item)
+            else:
+                raise ValueError("Something went wrong! Item was deleted from the table view but remains in self.hidden.")
+    
+    def hide(self, item):
+        if item not in self.hidden and self.exists(item):
+            self.hidden.add(item)
+            self.detach(item)
+            
+    def set_visible(self, item, visible):
+        if visible:
+            self.show(item)
+        else:
+            self.hide(item)
+            
+    def filter_by_search_string(self, search_string):
+        all_rows = self.get_children() + tuple(self.hidden)
+        is_visible = lambda row: match_search_string(search_string, row)
+        for name in all_rows:
+            row = (name,) + self.item(name, option='values')
+            self.set_visible(name, is_visible(row))
+        
+    def selection_clear(self):
+        for item in self.selection():
+            self.selection_remove(item)
+        
     def delete_selection(self, event):
         name = self.get_selected_name()
         if name is not None:
@@ -373,6 +461,11 @@ class TableView(ttk.Treeview):
     def get_selected_name(self):
         selection = self.selection()
         return selection[0] if selection else None
+    
+    def insert(self, parent, index, iid, *args, **kwargs):
+        super().insert(parent, index, iid, *args, **kwargs)
+        self.insert_order[iid] = self.total_insert_call_count
+        self.total_insert_call_count += 1
     
     def prepend(self, fields):
         self.insert("", 0, fields.name, text=fields.name, values=self._fields_to_values(fields))
@@ -394,11 +487,22 @@ class TableView(ttk.Treeview):
         
     def _fields_to_values(self, fields):
         return (fields.email, '*' * 8, fields.website)
+    
+class SearchEntry(ClipboardEntry):
+    def __init__(self, root, *args, **kwargs):
+        self.var = tk.StringVar(self)
+        super().__init__(root, *args, **kwargs, textvariable=self.var)
+        self.var.trace
+
             
+def match_search_string(search_string, row):
+    search_tokens = search_string.split()
+    token_matches = lambda token: any(map(lambda field: token in field, row))
+    return all(map(lambda token: token_matches(token), search_tokens))
 
 def fill_layout(root, db, encryption):
     top = tk.Frame(root)
-    top.pack(side=tk.TOP)
+    top.pack(side=tk.TOP, pady=1)
     
     form = Form(top, FIELDS, db, encryption, on_submit=db.submit, on_update=db.update, on_delete=db.delete)
     form.pack(side=tk.LEFT)
@@ -413,9 +517,19 @@ def fill_layout(root, db, encryption):
     bottom = tk.Frame(root)
     bottom.pack(fill=tk.BOTH, expand=True)
     
-    table = TableView(bottom, db)
+    table = TableView(bottom, db, encryption.decrypt)
     table.bind("<<TreeviewSelect>>", lambda event: form.load(table.get_selected_name()))
+    
+    searchvar = tk.StringVar()
+    searchvar.trace('w', lambda *args: table.filter_by_search_string(searchvar.get()))
+    NamedEntry(bottom, 'Search', width=61, textvariable=searchvar).pack()
     table.pack(fill=tk.BOTH, expand=True)
+    
+    
+    def clear_all():
+        form.clear()
+        table.selection_clear()
+    tk.Button(tools_panel, text="Clear form and selection", command=clear_all).pack()
 
 def copy_to_clipboard(root, text):
     root.clipboard_clear()
@@ -425,7 +539,7 @@ def make_root_window(width=500, height=700):
     root = tk.Tk()
     root.title("Password Manager")
     root.geometry(f'{width}x{height}')
-    root.minsize(420, 300)
+    root.minsize(440, 300)
     return root
 
 
