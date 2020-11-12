@@ -34,6 +34,18 @@ def hash_password(pwd, salt):
         dklen=128 # Get a 128 byte key
     )
 
+class Error:
+    def __init__(self, message=""):
+        self.message = message
+        
+    def __bool__(self):
+        return False
+    
+    def __str__(self):
+        return str(self.message)
+    
+    def __repr__(self):
+        return f"Error(message={self.message})"
 
 class DatabaseManager:
     def __init__(self, path):
@@ -47,9 +59,11 @@ class DatabaseManager:
                                 )
             """) # todo, build from FIELDS
             cursor.execute(""" CREATE TABLE IF NOT EXISTS master_pwd (hashed_password text)""")
+        self.on_submit = []
+        self.on_update = []
+        self.on_delete = []
             
     ROW_TUPLE = namedtuple("Row", ('name', 'email', 'password', 'website')) # todo: build from FIELDS, reuse same gen func with Form?
-
     
     def cursor(self):
         return Cursor(self.path)
@@ -94,47 +108,45 @@ class DatabaseManager:
             return bool(cursor.fetch("SELECT name FROM manager WHERE name = :name", {'name': name}))
 
     def submit(self, fields):
-        if fields.name and fields.email and fields.password and fields.website:
-            with self.cursor() as cursor:
-                cursor.execute("INSERT INTO manager VALUES (:name, :email, :password, :website)",
-                    {
-                        'name': fields.name,
-                        'email': fields.email,
-                        'password': fields.password, #encrypt_pwd(fields.password), #to maintain
-                        'website': fields.website,
-                    }
-                )
-            if (hasattr(self, 'on_submit')):
-                self.on_submit(fields)
-            return True, ""
-        else:
-            return False, "Please fill all details!"
+        if not fields.name:
+            return Error("Please fill in a name!")
+        with self.cursor() as cursor:
+            cursor.execute("INSERT INTO manager VALUES (:name, :email, :password, :website)",
+                {
+                    'name': fields.name,
+                    'email': fields.email,
+                    'password': fields.password, #encrypt_pwd(fields.password), #to maintain
+                    'website': fields.website,
+                }
+            )
+        for callback in self.on_submit:
+            callback(fields)
+        return True
 
 
     def delete(self, name):
-        if name is not None:
-            with self.cursor() as cursor:
-                cursor.execute("DELETE FROM manager WHERE manager.name = :name", { 'name': name })
-            if (hasattr(self, 'on_delete')):
-                self.on_delete(name)
-            return True, ""
-        else:
-            return False, "Please enter record id to delete!"
+        if not name:
+            return Error("Please fill in a name!")
+        with self.cursor() as cursor:
+            cursor.execute("DELETE FROM manager WHERE manager.name = :name", { 'name': name })
+        for callback in self.on_delete:
+            callback(name)
+        return True
 
 
     def update(self, fields):
-        if fields.name is not None:
-            with self.cursor() as cursor:
-                cursor.execute("UPDATE manager SET email = :email, password = :password, website = :website WHERE name = :name",
-                               {
-                                   'name': fields.name,
-                                   'email': fields.email,
-                                   'password': fields.password, #encrypt_pwd(fields.password), #to maintain
-                                   'website': fields.website,
-                                }
-                            ) #sanitize
-            if (hasattr(self, 'on_update')):
-                self.on_update(fields)
-            return True, ""
-        else:
-            return False, "Please enter fill all details!"
+        if not fields.name:
+            return Error("Please fill in a name!")
+        with self.cursor() as cursor:
+            cursor.execute("UPDATE manager SET email = :email, password = :password, website = :website WHERE name = :name",
+                           {
+                               'name': fields.name,
+                               'email': fields.email,
+                               'password': fields.password, #encrypt_pwd(fields.password), #to maintain
+                               'website': fields.website,
+                            }
+                        ) #sanitize
+        for callback in self.on_update:
+            callback(fields)
+        return True
+            
