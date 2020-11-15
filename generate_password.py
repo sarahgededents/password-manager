@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import string
-import pyperclip
+from context_menu import copy_to_clipboard
 
 from entry import ClipboardEntry
 from window import Window
@@ -89,7 +89,7 @@ class GeneratePassword(Window):
             self.entry.focus()
       
     def copy(self): 
-         pyperclip.copy(self.password.get())
+        copy_to_clipboard(self.tk, self.password.get())
 
     def select(self):
         if confirm_weak_password(self.password.get()):
