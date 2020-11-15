@@ -1,5 +1,3 @@
-from Crypto.Cipher import AES
-
 PADDING_CHAR = '\0'
 def pad(key, lengths=(16,24,32)):
     if len(key) in lengths:
@@ -8,6 +6,13 @@ def pad(key, lengths=(16,24,32)):
     return key + PADDING_CHAR * (target - len(key))
 
 
+class DummyCipher:
+    def encrypt(self, data, *args, **kwargs):
+        return data
+
+    def decrypt(self, data, *args, **kwargs):
+        return data
+
 class Encryption:
     @property
     def key(self):
@@ -15,7 +20,7 @@ class Encryption:
        
     @key.setter
     def key(self, val):
-        self._cipher = AES.new(pad(val))
+        self._cipher = DummyCipher()
     
     def encrypt(self, data):
         if self.key:
