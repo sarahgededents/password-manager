@@ -1,0 +1,4 @@
+captcha
+center-tk-window
+pycryptodome
+ttkthemes
