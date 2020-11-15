@@ -149,4 +149,3 @@ class DatabaseManager:
         for callback in self.on_update:
             callback(fields)
         return True
-            
