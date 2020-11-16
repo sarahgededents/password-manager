@@ -1,10 +1,12 @@
 import tkinter as tk
+from tkinter import messagebox
 
 from collections import namedtuple
 from entry import ClipboardEntry
 from generate_password import ARE_YOU_SURE_MSG, confirm_once, confirm_weak_password
 from private_entry import PrivateEntry
 from tkinter import ttk
+from functools import partial
 
 class Form(ttk.Frame):
     class Field:
@@ -48,7 +50,6 @@ class Form(ttk.Frame):
         self.on_delete_callback = on_delete
         self.update_btn_visibility()
         self.name.trace('w', self.update_btn_visibility)
-        self.password.trace('w', self._limit_max_pwd_length)
         
         db.on_submit.append( self.update_btn_visibility )
         db.on_delete.append( self.update_btn_visibility )
@@ -71,10 +72,11 @@ class Form(ttk.Frame):
         if name is None:
             self.clear()
         else:
+            show_error = partial(messagebox.showerror, "Password decryption failure")
             row = self.db.fetch_one(name)
             self.name.set(row.name)
             self.email.set(row.email)
-            self.password.set(self.encryption.decrypt(row.password))
+            self.password.set(self.encryption.decrypt(row.password, show_error))
             self.website.set(row.website)
         
     def on_submit_click(self):
@@ -124,7 +126,3 @@ class Form(ttk.Frame):
             self.submit_btn.grid(row=self.rowcount, column=2)
             self.update_btn.grid_forget()
             self.delete_btn.grid_forget()
-    
-    def _limit_max_pwd_length(self, *args):
-        if len(self.password.get()):
-            self.password.set(self.password.get()[:32])

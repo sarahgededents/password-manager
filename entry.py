@@ -26,7 +26,7 @@ class ClipboardEntry(ttk.Entry):
     
     def __init__(self, parent, max_length=None, **kwargs):
         self.data_var = kwargs.pop('textvariable', tk.StringVar())
-        self.max_length = max_length
+        self.max_length = 128
         self.data_changed_info = ClipboardEntry.DataChangedInfo()
         super().__init__(parent, textvariable=self.data_var, **kwargs)
         

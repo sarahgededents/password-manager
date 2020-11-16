@@ -4,19 +4,42 @@ import sqlite3
 import os
 import hashlib
 
+class EmptyCM:
+    def __enter__(self):
+        return None
+
+    def __exit__(self, *args):
+        pass
+
+class CancelOperation(BaseException):
+    pass
+
 class Cursor:
-    def __init__(self, path):
+    def __init__(self, path, name=''):
+        self.name = name
         self.path = path
+        self._nesting = 0
 
     def __enter__(self):
-        self.connection = sqlite3.connect(self.path)
-        self.cursor = self.connection.cursor()
+        if not self._nesting:
+            self.connection = sqlite3.connect(self.path)
+            self.cursor = self.connection.cursor()
+        self._nesting += 1
         return self
         
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.connection.commit()
-        self.connection.close()
-        
+        self._nesting -= 1
+        if not self._nesting:
+            if exc_type is None:
+                self.connection.commit()
+            self.connection.close()
+            if exc_type == CancelOperation:
+                return True
+
+    @staticmethod
+    def cancel():
+        raise CancelOperation()
+
     def execute(self, *args, **kwargs):
         return self.cursor.execute(*args, **kwargs)
     
@@ -65,8 +88,8 @@ class DatabaseManager:
             
     ROW_TUPLE = namedtuple("Row", ('name', 'email', 'password', 'website')) # todo: build from FIELDS, reuse same gen func with Form?
     
-    def cursor(self):
-        return Cursor(self.path)
+    def cursor(self, existing_cursor=None, name=''):
+        return Cursor(self.path, name) if existing_cursor is None else existing_cursor
     
     def _get_master_pwd_hash(self):
         with self.cursor() as cursor:
@@ -107,15 +130,15 @@ class DatabaseManager:
         with self.cursor() as cursor:
             return bool(cursor.fetch("SELECT name FROM manager WHERE name = :name", {'name': name}))
 
-    def submit(self, fields):
+    def submit(self, fields, cursor=None):
         if not fields.name:
             return Error("Please fill in a name!")
-        with self.cursor() as cursor:
+        with self.cursor(cursor) as cursor:
             cursor.execute("INSERT INTO manager VALUES (:name, :email, :password, :website)",
                 {
                     'name': fields.name,
                     'email': fields.email,
-                    'password': fields.password, #encrypt_pwd(fields.password), #to maintain
+                    'password': fields.password,
                     'website': fields.website,
                 }
             )
@@ -124,28 +147,34 @@ class DatabaseManager:
         return True
 
 
-    def delete(self, name):
+    def delete(self, name, cursor=None):
         if not name:
             return Error("Please fill in a name!")
-        with self.cursor() as cursor:
+        with self.cursor(cursor) as cursor:
             cursor.execute("DELETE FROM manager WHERE manager.name = :name", { 'name': name })
         for callback in self.on_delete:
             callback(name)
         return True
 
 
-    def update(self, fields):
+    def update(self, fields, cursor=None):
         if not fields.name:
             return Error("Please fill in a name!")
-        with self.cursor() as cursor:
+        with self.cursor(cursor) as cursor:
             cursor.execute("UPDATE manager SET email = :email, password = :password, website = :website WHERE name = :name",
                            {
                                'name': fields.name,
                                'email': fields.email,
-                               'password': fields.password, #encrypt_pwd(fields.password), #to maintain
+                               'password': fields.password,
                                'website': fields.website,
                             }
                         ) #sanitize
         for callback in self.on_update:
             callback(fields)
         return True
+
+    def recipher(self, decrypt, encrypt):
+        with self.cursor(name="recipher") as cursor:
+            for row in self.fetch_all():
+                new_row = row._replace(password=encrypt(decrypt(row.password)))
+                self.update(new_row, cursor=cursor)

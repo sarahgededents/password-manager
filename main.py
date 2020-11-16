@@ -1,6 +1,7 @@
 import center_tk_window
 import tkinter as tk
 import tkinter.simpledialog
+from tkinter import messagebox
 
 from data import FIELDS
 from database import DatabaseManager
@@ -12,6 +13,8 @@ from master_dialog import MasterDialog
 from table_view import TableView
 from tkinter import ttk
 from ttkthemes import ThemedTk
+
+from functools import partial
 
 
 
@@ -36,9 +39,10 @@ def fill_layout(root, db, encryption):
     
     bottom = ttk.Frame(root)
     bottom.pack(fill=tk.BOTH, expand=True)
-    
-    table = TableView(bottom, db, encryption.decrypt)
-    table.bind("<<TreeviewSelect>>", lambda event: form.load(table.get_selected_name()))
+
+    show_error = partial(messagebox.showerror, "Decryption failure")
+    decrypt = partial(encryption.decrypt, report_error_func=show_error)
+    table = TableView(bottom, db, decrypt, on_select=form.load)
     
     searchvar = tk.StringVar()
     searchvar.trace('w', lambda *args: table.filter_by_search_string(searchvar.get()))
@@ -67,7 +71,7 @@ def main():
     
     center_tk_window.center_on_screen(root)
     
-    encryption = Encryption()
+    encryption = Encryption(db)
     fill_layout(root, db, encryption)
     
     MasterDialog(root, db, encryption)
