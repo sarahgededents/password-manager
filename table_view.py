@@ -13,12 +13,14 @@ class TableView(ttk.Treeview):
         token_matches = lambda token: any(map(lambda field: token in field, row))
         return all(map(lambda token: token_matches(token), search_tokens))
 
-    def __init__(self, parent, db, func_decipher_private=None):
+    def __init__(self, parent, db, func_decipher_private=None, on_select=None):
         super().__init__(parent, columns=TableView.COLUMNS)
         self.total_insert_call_count = 0
         self.insert_order = {}
         self.hidden = set()
         self.db = db
+        self._on_select = on_select
+        self._last_selected = None
         for field in FIELDS:
             self.column(field['tree_column'], anchor=tk.CENTER, minwidth=50, width=0, stretch=tk.YES)
             self.heading(field['tree_column'], text=field['name'])
@@ -28,9 +30,15 @@ class TableView(ttk.Treeview):
 
         self.bind("<Button-3>", self.show_context_menu)
         self.bind("<Delete>", self.delete_selection)
+        self.bind("<<TreeviewSelect>>", self._on_treeview_select)
         db.on_submit.append( self.prepend )
         db.on_delete.append( self.delete )
         db.on_update.append( self.update_fields )
+
+    def _on_treeview_select(self, event):
+        self._last_selected = self.get_selected_name()
+        self._on_select(self.get_selected_name())
+        print(self.get_selected_name())
         
     def delete(self, *items):
         for item in items:
@@ -97,7 +105,8 @@ class TableView(ttk.Treeview):
     def show_context_menu(self, event):
         iid = self.identify_row(event.y)
         if iid:
-            self.selection_set(iid)
+            if self._last_selected != iid:
+                self.selection_set(iid)
             self.context_menu.fields = self.db.fetch_one(iid)
             if self.context_menu.fields is not None:
                 self.context_menu.post(event.x_root, event.y_root)

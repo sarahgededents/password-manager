@@ -3,6 +3,7 @@ import tkinter as tk
 from captcha_ import Captcha
 from generate_password import confirm_weak_password
 from private_entry import PrivateEntry
+from tkinter import messagebox
 from tkinter import ttk
 from window import Window
 
@@ -11,7 +12,7 @@ class MasterDialog(Window):
         CHECK = 0
         SET = 1
     
-    def __init__(self, parent, db, encryption=None, mode=Mode.CHECK):
+    def __init__(self, parent, db, encryption, mode=Mode.CHECK):
         self.db = db
         self.encryption = encryption
         self.mode = mode if self.db.has_master_pwd() else MasterDialog.Mode.SET
@@ -78,10 +79,15 @@ class MasterDialog(Window):
     
     def apply(self):
         if self.mode == MasterDialog.Mode.SET:
-            self.db.set_master_pwd(self.entry.get())
-        if self.encryption is not None:
-            self.encryption.key = self.entry.get()
-    
+            try:
+                self.encryption.password = self.entry.get()
+                self.db.set_master_pwd(self.entry.get())
+            except:
+                messagebox.showerror(title="Failure", message=f"Failed to set master password. Operation aborted.")
+                raise
+        else:
+            self.encryption.password = self.entry.get()
+
     def validate(self):
         self.label.grid_forget()
         ok = True

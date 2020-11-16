@@ -24,10 +24,8 @@ def confirm_once(title, password):
         icon = tk.messagebox.WARNING
     return tk.messagebox.askyesno(title=title, message=message, icon=icon)
 
-
-
 class GeneratePassword(Window):
-    MAX_LENGTH = 32
+    MAX_LENGTH = 128
     
     def show_dialog(parent):
         dialog = GeneratePassword(parent)
@@ -43,9 +41,9 @@ class GeneratePassword(Window):
         self.var_upper = tk.BooleanVar(value=True)
         self.var_digit = tk.BooleanVar(value=True)
         self.var_punct = tk.BooleanVar(value=False) 
-        self.var_length = tk.IntVar(value=12)
+        self.var_length = tk.IntVar(value=16)
         self.var_length_trace = TraceWriteCallbackOnChanged(var=self.var_length, cmd=self.generate_pwd)
-        
+
         self.resizable(False, False)
         frame_top = ttk.Frame(master)
         ttk.Button(frame_top, text="Copy", command=self.copy).pack(side=tk.LEFT)
@@ -71,6 +69,8 @@ class GeneratePassword(Window):
         ttk.Checkbutton(frame_check, text="123", variable=self.var_digit).grid(row=0, column=2) 
         ttk.Checkbutton(frame_check, text="@#%", variable=self.var_punct).grid(row=0,column=3)
         frame_check.pack(fill=tk.X)
+
+        self.generate_pwd()
         return self.entry
         
     def generate_pwd(self, *args):
