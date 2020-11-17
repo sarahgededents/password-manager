@@ -64,7 +64,6 @@ class WordSet:
         with self.open_file(self.in_path, 'r') as f:
             self._line_length = max(map(len, map(lambda s: s.rstrip('\n'), f)))
             self._line_length = min(self.max_length, self._line_length)
-        print(self._line_length)
         self._line_count = 0
         with self.open_file(self.in_path, 'r') as in_f:
             with self.open_file(self.out_path, 'w') as out_f:
@@ -81,7 +80,6 @@ class WordSet:
         with self as lines:
             while max > min:
                 mid = (max - min) // 2 + min
-                print(min, mid, max, lines[mid])
                 if item == lines[mid]:
                     return True
                 if item < lines[mid]:
@@ -94,4 +92,4 @@ class WordSet:
         with self as lines:
             return lines[item]
 
-COMMON_PASSWORDS = WordSet('rockyou.txt', already_sorted=False)
+COMMON_PASSWORDS = WordSet('rockyou.ws', already_padded=True)
