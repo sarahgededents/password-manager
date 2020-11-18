@@ -38,7 +38,6 @@ class TableView(ttk.Treeview):
     def _on_treeview_select(self, event):
         self._last_selected = self.get_selected_name()
         self._on_select(self.get_selected_name())
-        print(self.get_selected_name())
         
     def delete(self, *items):
         for item in items:

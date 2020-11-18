@@ -8,14 +8,12 @@ from database import DatabaseManager
 from encryption import Encryption
 from entry import NamedEntry
 from form import Form
+from functools import partial
 from generate_password import GeneratePassword
 from master_dialog import MasterDialog
 from table_view import TableView
 from tkinter import ttk
 from ttkthemes import ThemedTk
-
-from functools import partial
-
 
 
 def fill_layout(root, db, encryption):

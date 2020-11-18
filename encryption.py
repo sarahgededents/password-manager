@@ -54,7 +54,6 @@ class FernetPasswordCipher:
     def encrypt(self, data_bytes):
         salt = os.urandom(FernetPasswordCipher.SALT_LENGTH)
         key = self._derive_key(salt)
-        print(key)
         return salt + cryptography.fernet.Fernet(key).encrypt(data_bytes)
 
     def decrypt(self, encrypted_data):

@@ -2,10 +2,12 @@ import os.path
 from functools import partial
 
 class WordSet:
-    def __init__(self, path='rocky_you.txt', already_padded=False, already_sorted=True, max_length=15):
+    def __init__(self, path='rocky_you.txt', already_padded=False, already_sorted=True, max_length=15, line_count=None):
         self.in_path = path
         self.open_file = partial(open, encoding='utf-8', errors='ignore')
         self.max_length = max_length
+        if line_count:
+            self._line_count = line_count
         if already_padded and already_sorted:
             self._out_path = path
         else:
@@ -92,4 +94,4 @@ class WordSet:
         with self as lines:
             return lines[item]
 
-COMMON_PASSWORDS = WordSet('rockyou.ws', already_padded=True)
+COMMON_PASSWORDS = WordSet('rockyou.ws', already_padded=True, line_count=14104409)

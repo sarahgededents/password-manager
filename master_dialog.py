@@ -11,7 +11,7 @@ class MasterDialog(Window):
     class Mode:
         CHECK = 0
         SET = 1
-    
+
     def __init__(self, parent, db, encryption, mode=Mode.CHECK):
         self.db = db
         self.encryption = encryption
@@ -28,6 +28,7 @@ class MasterDialog(Window):
         pwd = tk.StringVar()
         self.entry = PrivateEntry(master, textvariable=pwd, width=38)
         self.entry.grid(row=1)
+
         if self.mode == MasterDialog.Mode.SET:
             ttk.Label(master, text="Confirm master password:").grid(row=2)
             self.entry2 = PrivateEntry(master, width=38)
@@ -110,6 +111,7 @@ class MasterDialog(Window):
             self.label.grid(row=4)
         if not ok and self.mode == MasterDialog.Mode.SET:
             self.label.grid(row=5)
+
         return ok
 
     def _is_changing_password(self):
