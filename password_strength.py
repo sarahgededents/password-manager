@@ -1,16 +1,39 @@
 import tkinter as tk
 from tkinter import ttk
 from collections import namedtuple
+from word_set import COMMON_PASSWORDS
+from time_cracker import number_results
 
-root = tk.Tk()
+def compute_password_strength(pwd):
+    if not pwd:
+        return 0
+    if pwd in COMMON_PASSWORDS: # too long to process
+        return PWD_STRENGTH.VERY_WEAK.value
+
+    number_combinations = number_results(pwd)
+    if number_combinations <= 3.54*10**12:
+        return PWD_STRENGTH.VERY_WEAK.value
+    if 3.54*10**12 < number_combinations <= 8.28*10**13:
+        return PWD_STRENGTH.WEAK.value
+    if 8.28*10**13 < number_combinations <= 3.145*10**16:
+        return PWD_STRENGTH.OK.value
+    if 3.145*10**16 < number_combinations <= 3.145*10**17:
+        return PWD_STRENGTH.GOOD.value
+    if 3.145*10**17 < number_combinations <= 1.572*10**19:
+        return PWD_STRENGTH.STRONG.value
+    if 1.572*10**19 < number_combinations:
+        return PWD_STRENGTH.VERY_STRONG.value
+    return PWD_STRENGTH.VERY_WEAK.value
+
 
 class DotDict(dict):
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
+
 PWD_STR_TUPLE = namedtuple('Strength', ('value', 'color', 'weight'))
-_PWD_STRENGTH = [ ('VERY_WEAK', 'red', .4), ('WEAK', 'orange', 1.1), ('GOOD', 'yellow', .8), ('STRONG', 'green', .5) ]
+_PWD_STRENGTH = [ ('VERY_WEAK', 'orange red', .8), ('WEAK', 'dark orange', .8), ('OK', 'orange', .8), ('GOOD', 'gold', .8), ('STRONG', 'yellow green', .8), ('VERY_STRONG', 'sea green', .8) ]
 PWD_STRENGTH = DotDict({ strength: PWD_STR_TUPLE(value+1, color, weight) for (value, (strength, color, weight)) in enumerate(_PWD_STRENGTH) })
 
 def pwd_strength_to_string(pwd_strength):
@@ -22,7 +45,7 @@ class PasswordStrength(ttk.Frame):
     class Bar(tk.Canvas):
         RECTANGLE_TUPLE = namedtuple('Rectangle', ('id', 'value', 'start', 'end', 'color'))
 
-        def __init__(self, parent, width=200, height=30, singlemode=True):
+        def __init__(self, parent, width=250, height=15, singlemode=True):
             super().__init__(parent, width=width, height=height)
             self.width, self.height = width, height
             self.singlemode = singlemode
@@ -59,14 +82,9 @@ class PasswordStrength(ttk.Frame):
     def __init__(self, parent, password_var):
         super().__init__(parent)
         self.var = tk.IntVar()
-        self.bar = PasswordStrength.Bar(self, singlemode=False)
+        self.bar = PasswordStrength.Bar(self, singlemode=True)
         self.bar.pack(expand=True, fill=tk.BOTH)
-        password_var.trace('w', lambda *args: self.update(password_var.get()))
+        password_var.trace('w', lambda *args: self.update_bar(password_var.get()))
 
-    def update(self, password):
-        self.bar.set_value(len(password))
-
-pwd = tk.StringVar()
-PasswordStrength(root, pwd).pack(expand=True, fill=tk.BOTH)
-tk.Entry(root, textvariable=pwd).pack()
-root.mainloop()
+    def update_bar(self, password):
+        self.bar.set_value(compute_password_strength(password))

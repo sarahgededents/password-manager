@@ -1,27 +1,19 @@
 import tkinter as tk
 from tkinter import ttk
 import string
+
 from context_menu import copy_to_clipboard
-
 from entry import ClipboardEntry
-from window import Window
+from password_strength import PasswordStrength
 from scale_utils import TraceWriteCallbackOnChanged, ttk_scale_int
-from security_utils import generate_random_string, is_weak_password
+from security_utils import generate_random_string
+from window import Window
 
-WEAK_PWD_MSG = "Your password may be weak..."
 ARE_YOU_SURE_MSG = "Are you sure?"
-
-
-def confirm_weak_password(password):
-    ask_user = lambda: tk.messagebox.askokcancel(title="Weak password", message=WEAK_PWD_MSG, icon = tk.messagebox.WARNING)
-    return not is_weak_password(password) or ask_user()
 
 def confirm_once(title, password):
     message = ARE_YOU_SURE_MSG
     icon = tk.messagebox.INFO
-    if is_weak_password(password):
-        message = WEAK_PWD_MSG + '\n' + message
-        icon = tk.messagebox.WARNING
     return tk.messagebox.askyesno(title=title, message=message, icon=icon)
 
 class GeneratePassword(Window):
@@ -55,8 +47,11 @@ class GeneratePassword(Window):
         self.entry = ClipboardEntry(frame_generate, width=38, max_length=GeneratePassword.MAX_LENGTH, textvariable=self.password)
         self.entry.grid(row=0)
         ttk.Button(frame_generate, text="Generate", command=self.generate_pwd).grid(row=0, column=1)
+        frame_weak = PasswordStrength(frame_generate, self.password)
+        frame_weak.grid(row=1)
         frame_generate.pack(fill=tk.X)
-        
+
+
         frame_length = ttk.Frame(master)
         tk.Label(frame_length, text="Length").grid(row=0, column=0)
         ttk.Scale(frame_length, variable=self.var_length, from_=5, to=GeneratePassword.MAX_LENGTH, orient=tk.HORIZONTAL, command=ttk_scale_int(self.var_length), length=200).grid(row=0, column=1)
@@ -92,6 +87,5 @@ class GeneratePassword(Window):
         copy_to_clipboard(self.tk, self.password.get())
 
     def select(self):
-        if confirm_weak_password(self.password.get()):
-            self.is_password_selected = True
-            self.close()
+        self.is_password_selected = True
+        self.close()

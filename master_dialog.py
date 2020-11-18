@@ -1,11 +1,11 @@
 import tkinter as tk
 
 from captcha_ import Captcha
-from generate_password import confirm_weak_password
 from private_entry import PrivateEntry
 from tkinter import messagebox
 from tkinter import ttk
 from window import Window
+from password_strength import PasswordStrength
 
 class MasterDialog(Window):
     class Mode:
@@ -25,13 +25,15 @@ class MasterDialog(Window):
         self.resizable(False, False)
         verb = self._get_verb()
         ttk.Label(master, text=f"{verb} master password:").grid(row=0)
-        self.entry = PrivateEntry(master, width=38)
+        pwd = tk.StringVar()
+        self.entry = PrivateEntry(master, textvariable=pwd, width=38)
         self.entry.grid(row=1)
         if self.mode == MasterDialog.Mode.SET:
             ttk.Label(master, text="Confirm master password:").grid(row=2)
             self.entry2 = PrivateEntry(master, width=38)
             self.entry2.grid(row=3)
-            
+            frame = PasswordStrength(master, pwd)
+            frame.grid(row=4)
         if self.mode == MasterDialog.Mode.CHECK:
             self.captcha = Captcha(master)
             self.captcha.grid(row=2)
@@ -55,7 +57,7 @@ class MasterDialog(Window):
         box.pack(fill=tk.BOTH, expand=True)
     
     def ok(self, event=None):
-        if not self.validate() or not self.confirm_weak_password():
+        if not self.validate():
             if self.mode == MasterDialog.Mode.CHECK:
                 self.captcha.refresh()
                 self.entry.delete(0, tk.END)
@@ -104,12 +106,11 @@ class MasterDialog(Window):
                 self.label.configure(text="Passwords don't match!")
                 ok = False
 
-        if not ok:
+        if not ok and self.mode == MasterDialog.Mode.CHECK:
             self.label.grid(row=4)
+        if not ok and self.mode == MasterDialog.Mode.SET:
+            self.label.grid(row=5)
         return ok
-
-    def confirm_weak_password(self):
-        return self.mode != MasterDialog.Mode.SET or confirm_weak_password(self.entry.get())
 
     def _is_changing_password(self):
         return self.mode == MasterDialog.Mode.SET and self.db.has_master_pwd()

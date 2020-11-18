@@ -24,7 +24,7 @@ class WordSet:
         def __getitem__(self, item):
             if self.line_count is not None and item >= self.line_count:
                 raise IndexError('line index out of range')
-            self.file.seek(item * (self.line_length + 2))
+            self.file.seek(item * (self.line_length + 2)) # 2 is len('\r\n'), TODO: make more portable
             return self.file.read(self.line_length).rstrip('\0')
 
     def __enter__(self):

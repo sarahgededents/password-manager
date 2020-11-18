@@ -3,14 +3,14 @@ from tkinter import messagebox
 
 from collections import namedtuple
 from entry import ClipboardEntry
-from generate_password import ARE_YOU_SURE_MSG, confirm_once, confirm_weak_password
+from generate_password import ARE_YOU_SURE_MSG, confirm_once
 from private_entry import PrivateEntry
 from tkinter import ttk
 from functools import partial
 
 class Form(ttk.Frame):
     class Field:
-        def __init__(self, parent, uid, name, private=False, form=None, **kwargs):
+        def __init__(self, parent, uid, name, private=False, form=None, companion=None, **kwargs):
             self.private = private
             self.form = form if form is not None else parent
             self.uid = uid
@@ -19,6 +19,10 @@ class Form(ttk.Frame):
             entryType = PrivateEntry if self.private else ClipboardEntry
             self.entry = entryType(parent, width=38, textvariable=self.var)
             self.entry.bind("<Return>", self.on_return_pressed)
+
+            self.companion = None
+            if companion:
+                self.companion = companion(parent, textvariable=self.var)
             #self.entry.bind("<Escape>", self.clear)
         
         def clear(self, event=None):
@@ -61,6 +65,10 @@ class Form(ttk.Frame):
         field.label.grid(row=self.rowcount, column=0)
         field.entry.grid(row=self.rowcount, column=1, columnspan=2, sticky=tk.W)
         self.rowcount += 1
+        companion = field_descriptor.get('companion_widget', None)
+        if field.companion:
+            field.companion.grid(row=self.rowcount, column=1, columnspan=2, sticky=tk.W)
+            self.rowcount += 1
         setattr(self, field.uid, field.var) # easier access to each var from outside
     
     def clear(self):
@@ -80,10 +88,9 @@ class Form(ttk.Frame):
             self.website.set(row.website)
         
     def on_submit_click(self):
-        if confirm_weak_password(self.password.get()):
-            fields = self._get_fields_as_namedtuple()
-            result = self.on_submit_callback(fields)
-            self._handle_error(result, title="Submit error")
+        fields = self._get_fields_as_namedtuple()
+        result = self.on_submit_callback(fields)
+        self._handle_error(result, title="Submit error")
         
     def on_update_click(self):
         if confirm_once("Update", self.password.get()):
