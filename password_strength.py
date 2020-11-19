@@ -2,26 +2,25 @@ import tkinter as tk
 from tkinter import ttk
 from collections import namedtuple
 from word_set import COMMON_PASSWORDS
-from time_cracker import number_results
+from time_cracker import number_results, TIME_IN_NS
 
 def compute_password_strength(pwd):
     if not pwd:
         return 0
-    if pwd in COMMON_PASSWORDS: # too long to process
+    if pwd in COMMON_PASSWORDS:
         return PWD_STRENGTH.VERY_WEAK.value
-
     number_combinations = number_results(pwd)
-    if number_combinations <= 3.54*10**12:
+    if number_combinations < TIME_IN_NS.HOUR:
         return PWD_STRENGTH.VERY_WEAK.value
-    if 3.54*10**12 < number_combinations <= 8.28*10**13:
+    if TIME_IN_NS.HOUR <= number_combinations < TIME_IN_NS.DAY:
         return PWD_STRENGTH.WEAK.value
-    if 8.28*10**13 < number_combinations <= 3.145*10**16:
+    if TIME_IN_NS.DAY <= number_combinations < TIME_IN_NS.YEAR:
         return PWD_STRENGTH.OK.value
-    if 3.145*10**16 < number_combinations <= 3.145*10**17:
+    if TIME_IN_NS.YEAR <= number_combinations < 10 * TIME_IN_NS.YEAR:
         return PWD_STRENGTH.GOOD.value
-    if 3.145*10**17 < number_combinations <= 1.572*10**19:
+    if 10 * TIME_IN_NS.YEAR <= number_combinations < 500 * TIME_IN_NS.YEAR:
         return PWD_STRENGTH.STRONG.value
-    if 1.572*10**19 < number_combinations:
+    if 500 * TIME_IN_NS.YEAR < number_combinations:
         return PWD_STRENGTH.VERY_STRONG.value
     return PWD_STRENGTH.VERY_WEAK.value
 
