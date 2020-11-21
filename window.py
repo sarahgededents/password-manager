@@ -1,9 +1,11 @@
 import center_tk_window
 import tkinter as tk
+import abc
 
 from tkinter import ttk
 
-class Window(tk.Toplevel):
+
+class Window(tk.Toplevel, metaclass=abc.ABCMeta):
     def __init__(self, parent, title):
         super().__init__(parent)
 
@@ -30,7 +32,11 @@ class Window(tk.Toplevel):
         self.wait_visibility()
         self.grab_set()
         self.wait_window(self)
-    
+
+    @abc.abstractmethod
+    def _body(self, frame):
+        pass
+
     def destroy(self):
         self.initial_focus = None
         super().destroy()

@@ -45,20 +45,19 @@ class FernetPasswordCipher:
         if not self.has_password():
             raise ValueError("FernetPasswordCipher: No password currently set, cannot derive key")
         key_derivator = key_derivation.PBKDF2HMAC(
-            algorithm=hashes.SHA256(), length=32, salt=salt, iterations=FernetPasswordCipher.KDF_ITERATIONS,
+            algorithm=hashes.SHA256(), length=32, salt=salt, iterations=self.KDF_ITERATIONS,
             backend=cryptography.hazmat.backends.default_backend()
         )
         pwd_to_key = compose(base64.urlsafe_b64encode, key_derivator.derive)
         return pwd_to_key(self._password)  # cryptography.Fernet expects a URL-safe base64-encoded 32-byte key
 
     def encrypt(self, data_bytes):
-        salt = os.urandom(FernetPasswordCipher.SALT_LENGTH)
+        salt = os.urandom(self.SALT_LENGTH)
         key = self._derive_key(salt)
         return salt + cryptography.fernet.Fernet(key).encrypt(data_bytes)
 
     def decrypt(self, encrypted_data):
-        salt_length = FernetPasswordCipher.SALT_LENGTH
-        salt, data_bytes = encrypted_data[:salt_length], encrypted_data[salt_length:]
+        salt, data_bytes = encrypted_data[:self.SALT_LENGTH], encrypted_data[self.SALT_LENGTH:]
         try:
             key = self._derive_key(salt)
             return cryptography.fernet.Fernet(key).decrypt(data_bytes)
@@ -81,17 +80,18 @@ class Encryption:
 
     @password.setter
     def password(self, pwd):
-        if self.password:
-            self._update_password(pwd)
+        if self.password or not self._db.has_master_pwd():
+            self.update_password(pwd)
         else:
-            self._load_password(pwd)
+            self.load_password(pwd)
 
-    def _load_password(self, pwd):
+    def load_password(self, pwd):
         self._set_cipher(self._cipher_type(pwd))
 
-    def _update_password(self, pwd):
+    def update_password(self, pwd):
         old_cipher, new_cipher = self._cipher, self._cipher_type(pwd)
         self._db.recipher(decrypt=old_cipher.decrypt, encrypt=new_cipher.encrypt)
+        self._db.set_master_pwd(pwd)
         self._set_cipher(new_cipher)
 
     def _set_cipher(self, cipher):

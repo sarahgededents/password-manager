@@ -10,7 +10,7 @@ from entry import NamedEntry
 from form import Form
 from functools import partial
 from generate_password import GeneratePassword
-from master_dialog import MasterDialog
+from master_dialog import MasterDialogInit, MasterDialogChange, MasterDialogCheck
 from table_view import TableView
 from tkinter import ttk
 from ttkthemes import ThemedTk
@@ -27,7 +27,7 @@ def fill_layout(root, db, encryption):
     tools_panel.pack(side=tk.LEFT)
     ttk.Frame(top).pack(side=tk.LEFT, fill=tk.X, expand=True) #hfill
     
-    change_master_btn = ttk.Button(tools_panel, text="Change master password", command=lambda: MasterDialog(root, db, encryption, MasterDialog.Mode.SET))
+    change_master_btn = ttk.Button(tools_panel, text="Change master password", command=lambda: MasterDialogChange(root, db, encryption))
     change_master_btn.pack()
     def show_generate_pwd_dialog():
         pwd = GeneratePassword.show_dialog(root)
@@ -71,9 +71,11 @@ def main():
     
     encryption = Encryption(db)
     fill_layout(root, db, encryption)
-    
-    MasterDialog(root, db, encryption)
-    #GeneratePassword(root)
+
+    if db.has_master_pwd():
+        MasterDialogCheck(root, db, encryption)
+    else:
+        MasterDialogInit(root, db, encryption)
 
     root.mainloop()
 
