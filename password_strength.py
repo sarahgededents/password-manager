@@ -1,13 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
 from collections import namedtuple
-from word_set import COMMON_PASSWORDS
+from word_set import WordSet
 from time_cracker import number_results, TIME_IN_NS
+
+COMMON_PASSWORDS_LENGTH_9_TO_16 = WordSet('rockyou_9-17.ws')
 
 def compute_password_strength(pwd):
     if not pwd:
         return 0
-    if pwd in COMMON_PASSWORDS:
+    if pwd in COMMON_PASSWORDS_LENGTH_9_TO_16:
         return PWD_STRENGTH.VERY_WEAK.value
     number_combinations = number_results(pwd)
     if number_combinations < TIME_IN_NS.HOUR:
