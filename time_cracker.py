@@ -3,9 +3,8 @@ import math
 import csv
 from brute_force import gen_pwds
 
+# we make the hypothetis that a computer take 1 nanosecond/combination
 
-
-alphabet_most_secure = string.ascii_lowercase + string.ascii_uppercase + string.digits + string.punctuation
 CHARSETS = { string.ascii_lowercase: 'lower', string.ascii_uppercase: 'upper', string.digits: 'digits', string.punctuation: 'punctuation'}
 
 
@@ -37,7 +36,6 @@ class TIME_IN_NS:
     HOUR = 60 * MINUTE
     DAY = 24 * HOUR
     YEAR = 365 * DAY
-
 
 
 def convert_to(target):
@@ -82,11 +80,11 @@ def build_results(path = "duration_brute_force_results.csv"):
                 strength = "weak"
             if time_ref == TIME_IN_NS.DAY:
                 strength = "ok"
-            if time_ref == TIME_IN_NS.YEAR and duration <= 10:
+            if time_ref == TIME_IN_NS.YEAR and duration < 10:
                 strength = "good" #TODO see when it is strong (how many years should it be unbreakable?)
-            if time_ref == TIME_IN_NS.YEAR and 500 >= duration > 10:
+            if time_ref == TIME_IN_NS.YEAR and 500 > duration >= 10:
                 strength = "strong"
-            if time_ref == TIME_IN_NS.YEAR and duration > 500:
+            if time_ref == TIME_IN_NS.YEAR and duration >= 500:
                 strength = "very strong"
             rspliter = category.rsplit("_", 1)
             writer.writerow([rspliter[0], rspliter[1], duration, unit_string,  password, strength])

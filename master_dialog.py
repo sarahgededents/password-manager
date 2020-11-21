@@ -28,7 +28,7 @@ class MasterDialog(Window):
         pwd = tk.StringVar()
         self.entry = PrivateEntry(master, textvariable=pwd, width=38)
         self.entry.grid(row=1)
-
+        self.label = ttk.Label(master)
         if self.mode == MasterDialog.Mode.SET:
             ttk.Label(master, text="Confirm master password:").grid(row=2)
             self.entry2 = PrivateEntry(master, width=38)
@@ -39,7 +39,6 @@ class MasterDialog(Window):
             self.captcha = Captcha(master)
             self.captcha.grid(row=2)
 
-        self.label = ttk.Label(master)    
         return self.entry
     
     def _buttonbox(self):
@@ -108,7 +107,7 @@ class MasterDialog(Window):
                 ok = False
 
         if not ok and self.mode == MasterDialog.Mode.CHECK:
-            self.label.grid(row=4)
+            self.label.grid(row=3)
         if not ok and self.mode == MasterDialog.Mode.SET:
             self.label.grid(row=5)
 
