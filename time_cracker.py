@@ -1,12 +1,30 @@
-import string
-import math
 import csv
-from brute_force import gen_pwds
+import math
+import string
+
+from itertools import combinations
+from security_utils import generate_random_string
 
 # we make the hypothetis that a computer take 1 nanosecond/combination
 
 CHARSETS = { string.ascii_lowercase: 'lower', string.ascii_uppercase: 'upper', string.digits: 'digits', string.punctuation: 'punctuation'}
 
+def gen_pwd(length, charsets):
+    password = generate_random_string(length, charsets)
+    charsets_names = sorted(set(map(CHARSETS.get, charsets)))
+    return { '_'.join(charsets_names) + f'_{length}': f'{password}' }
+
+def gen_pwds(start_length, stop_length=None):
+    assert start_length >= 4
+    if not stop_length or stop_length < start_length:
+        stop_length = start_length
+    pwds = {}
+    for length in range(start_length, stop_length + 1):
+        for charsets_count in range(len(CHARSETS)):
+            for charsets in combinations(CHARSETS.keys(), charsets_count+1):
+                pwd = gen_pwd(length, charsets)
+                pwds.update(pwd)
+    return pwds
 
 def multicomb(n, k):
     return math.comb(n+k-1, k)
