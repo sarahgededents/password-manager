@@ -4,7 +4,7 @@ from collections import namedtuple
 from word_set import WordSet
 from time_cracker import number_results, TIME_IN_NS
 
-COMMON_PASSWORDS_LENGTH_9_TO_16 = WordSet('rockyou_9-17.ws')
+COMMON_PASSWORDS_LENGTH_9_TO_16 = WordSet('rockyou_9-16.ws')
 
 def compute_password_strength(pwd):
     if not pwd:
