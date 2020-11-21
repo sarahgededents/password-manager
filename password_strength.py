@@ -46,7 +46,7 @@ class PasswordStrength(ttk.Frame):
     class Bar(tk.Canvas):
         RECTANGLE_TUPLE = namedtuple('Rectangle', ('id', 'value', 'start', 'end', 'color'))
 
-        def __init__(self, parent, width=250, height=15, singlemode=True):
+        def __init__(self, parent, width=230, height=12, singlemode=True):
             super().__init__(parent, width=width, height=height)
             self.width, self.height = width, height
             self.singlemode = singlemode

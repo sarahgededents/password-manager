@@ -56,7 +56,7 @@ def fill_layout(root, db, encryption):
 
 
 def make_root_window(width=500, height=700):
-    root = ThemedTk(theme="breeze")
+    root = ThemedTk(theme="arc")
     root.title("Password Manager")
     root.geometry(f'{width}x{height}')
     root.minsize(480, 300)

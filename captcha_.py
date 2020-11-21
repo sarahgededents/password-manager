@@ -25,7 +25,6 @@ class Captcha(ttk.Frame):
         self.image = ImageTk.PhotoImage(image)
         self.label.configure(image=self.image)
         self.entry.delete(0, tk.END)
-        self.entry.insert(0, self.result) # REMOVE ME
     
     def validate(self):
         result = self.result == self.entry.get()

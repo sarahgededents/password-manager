@@ -29,12 +29,17 @@ class GeneratePassword(Window):
     def _body(self, master):
         self.is_password_selected = False
         self.password = tk.StringVar(value="")
-        self.var_lower = tk.BooleanVar(value=True) 
+        self.var_lower = tk.BooleanVar(value=True)
         self.var_upper = tk.BooleanVar(value=True)
         self.var_digit = tk.BooleanVar(value=True)
         self.var_punct = tk.BooleanVar(value=False) 
         self.var_length = tk.IntVar(value=16)
         self.var_length_trace = TraceWriteCallbackOnChanged(var=self.var_length, cmd=self.generate_pwd)
+
+        self.var_lower.trace("w", self.generate_pwd)
+        self.var_upper.trace("w", self.generate_pwd)
+        self.var_digit.trace("w", self.generate_pwd)
+        self.var_punct.trace("w", self.generate_pwd)
 
         self.resizable(False, False)
         frame_top = ttk.Frame(master)

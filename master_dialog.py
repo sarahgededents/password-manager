@@ -153,7 +153,7 @@ class MasterDialogChange(MasterDialogBase):
         self.confirm_entry = PrivateEntry(frame, width=38)
         self.confirm_entry.grid(row=next(rowcount))
         PasswordStrength(frame, self.password_var).grid(row=next(rowcount))
-        return self.new_entry
+        return self.old_entry
 
     def cancel(self, event=None):
         self.parent.focus_set()
