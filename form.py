@@ -8,13 +8,18 @@ from private_entry import PrivateEntry
 from tkinter import ttk
 from functools import partial
 
+class PrivateStringVar(tk.StringVar):
+    def set(self, v):
+        super().set('\0' * len(self.get()))
+        super().set(v)
+
 class Form(ttk.Frame):
     class Field:
         def __init__(self, parent, uid, name, private=False, form=None, companion=None, **kwargs):
             self.private = private
             self.form = form if form is not None else parent
             self.uid = uid
-            self.var = tk.StringVar()
+            self.var = PrivateStringVar() if self.private else tk.StringVar()
             self.label = ttk.Label(parent, text = name)
             entryType = PrivateEntry if self.private else ClipboardEntry
             self.entry = entryType(parent, width=38, textvariable=self.var)

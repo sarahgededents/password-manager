@@ -14,18 +14,16 @@ def compute_password_strength(pwd):
     number_combinations = number_results(pwd)
     if number_combinations < TIME_IN_NS.HOUR:
         return PWD_STRENGTH.VERY_WEAK.value
-    if TIME_IN_NS.HOUR <= number_combinations < TIME_IN_NS.DAY:
+    elif number_combinations < TIME_IN_NS.DAY:
         return PWD_STRENGTH.WEAK.value
-    if TIME_IN_NS.DAY <= number_combinations < TIME_IN_NS.YEAR:
+    elif number_combinations < TIME_IN_NS.YEAR:
         return PWD_STRENGTH.OK.value
-    if TIME_IN_NS.YEAR <= number_combinations < 10 * TIME_IN_NS.YEAR:
+    elif number_combinations < 10 * TIME_IN_NS.YEAR:
         return PWD_STRENGTH.GOOD.value
-    if 10 * TIME_IN_NS.YEAR <= number_combinations < 500 * TIME_IN_NS.YEAR:
+    elif number_combinations < 500 * TIME_IN_NS.YEAR:
         return PWD_STRENGTH.STRONG.value
-    if 500 * TIME_IN_NS.YEAR < number_combinations:
+    else:
         return PWD_STRENGTH.VERY_STRONG.value
-    return PWD_STRENGTH.VERY_WEAK.value
-
 
 class DotDict(dict):
     __getattr__ = dict.get
