@@ -28,7 +28,6 @@ class Form(ttk.Frame):
             self.companion = None
             if companion:
                 self.companion = companion(parent, textvariable=self.var)
-            #self.entry.bind("<Escape>", self.clear)
         
         def clear(self, event=None):
             self.var.set("")

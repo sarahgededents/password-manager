@@ -28,7 +28,6 @@ class RightClickMenu(tk.Menu):
         self.add_command(label="Delete", command=self.delete)
     
     def copy_field(self, field_desc):
-        #print(field_desc)
         field_value = self._get_field_value(field_desc)
         if field_value is not None:
             copy_to_clipboard(self, field_value)

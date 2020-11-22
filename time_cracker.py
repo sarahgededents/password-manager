@@ -99,7 +99,7 @@ def build_results(path = "duration_brute_force_results.csv"):
             if time_ref == TIME_IN_NS.DAY:
                 strength = "ok"
             if time_ref == TIME_IN_NS.YEAR and duration < 10:
-                strength = "good" #TODO see when it is strong (how many years should it be unbreakable?)
+                strength = "good"
             if time_ref == TIME_IN_NS.YEAR and 500 > duration >= 10:
                 strength = "strong"
             if time_ref == TIME_IN_NS.YEAR and duration >= 500:
