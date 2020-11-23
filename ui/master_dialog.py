@@ -1,11 +1,11 @@
 import tkinter as tk
 
-from captcha_ import Captcha
-from private_entry import PrivateEntry
+from ui.captcha_ import Captcha
+from ui.private_entry import PrivateEntry
 from tkinter import messagebox
 from tkinter import ttk
-from window import Window
-from password_strength import PasswordStrength
+from ui.window import Window
+from security.password_strength import PasswordStrength
 import itertools
 
 

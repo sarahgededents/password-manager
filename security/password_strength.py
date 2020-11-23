@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 from collections import namedtuple
-from word_set import WordSet
-from time_cracker import number_results, TIME_IN_NS
+from security.word_set import WordSet
+from security.time_cracker import number_results, TIME_IN_NS
 
 COMMON_PASSWORDS_LENGTH_9_TO_16 = WordSet('rockyou_9-16.ws')
 

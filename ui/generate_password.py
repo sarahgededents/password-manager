@@ -2,12 +2,12 @@ import tkinter as tk
 from tkinter import ttk
 import string
 
-from context_menu import copy_to_clipboard
-from entry import ClipboardEntry
-from password_strength import PasswordStrength
-from scale_utils import TraceWriteCallbackOnChanged, ttk_scale_int
-from security_utils import generate_random_string
-from window import Window
+from ui.context_menu import copy_to_clipboard
+from ui.entry import ClipboardEntry
+from security.password_strength import PasswordStrength
+from ui.scale_utils import TraceWriteCallbackOnChanged, ttk_scale_int
+from security.utils import generate_random_string
+from ui.window import Window
 
 ARE_YOU_SURE_MSG = "Are you sure?"
 

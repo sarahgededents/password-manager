@@ -1,4 +1,4 @@
-from password_strength import PasswordStrength
+from security.password_strength import PasswordStrength
 
 def make_pwd_strength_companion(parent, textvariable):
     return PasswordStrength(parent, password_var=textvariable)

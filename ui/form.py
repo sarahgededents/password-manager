@@ -2,9 +2,9 @@ import tkinter as tk
 from tkinter import messagebox
 
 from collections import namedtuple
-from entry import ClipboardEntry
-from generate_password import ARE_YOU_SURE_MSG, confirm_once
-from private_entry import PrivateEntry
+from ui.entry import ClipboardEntry
+from ui.generate_password import ARE_YOU_SURE_MSG, confirm_once
+from ui.private_entry import PrivateEntry
 from tkinter import ttk
 from functools import partial
 

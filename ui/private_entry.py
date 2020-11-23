@@ -1,6 +1,6 @@
 import tkinter as tk
 
-from entry import ClipboardEntry
+from ui.entry import ClipboardEntry
 from tkinter import ttk
 
 class PrivateEntry(ttk.Frame):

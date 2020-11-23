@@ -3,7 +3,7 @@ import math
 import string
 
 from itertools import combinations
-from security_utils import generate_random_string
+from security.utils import generate_random_string
 
 # we make the hypothetis that a computer take 1 nanosecond/combination
 

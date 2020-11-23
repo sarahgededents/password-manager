@@ -1,7 +1,7 @@
 import tkinter as tk
 
-from context_menu import RightClickMenu
-from data import FIELDS
+from ui.context_menu import RightClickMenu
+from persistence.data import FIELDS
 from tkinter import ttk
 
 
