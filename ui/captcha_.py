@@ -1,9 +1,9 @@
 import tkinter as tk
 
 from captcha.image import ImageCaptcha
-from entry import ClipboardEntry
+from ui.entry import ClipboardEntry
 from PIL import ImageTk
-from security_utils import generate_captcha_string
+from security.utils import generate_captcha_string
 from tkinter import ttk
 
 class Captcha(ttk.Frame):

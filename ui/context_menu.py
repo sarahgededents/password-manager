@@ -1,7 +1,7 @@
 import tkinter as tk
 import webbrowser
 
-from data import FIELDS
+from persistence.data import FIELDS
 
 def copy_to_clipboard(root, text):
     root.clipboard_clear()

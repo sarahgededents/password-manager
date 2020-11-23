@@ -3,15 +3,15 @@ import tkinter as tk
 import tkinter.simpledialog
 from tkinter import messagebox
 
-from data import FIELDS
-from database import DatabaseManager
-from encryption import Encryption
-from entry import NamedEntry
-from form import Form
+from persistence.data import FIELDS
+from persistence.database import DatabaseManager
+from persistence.encryption import Encryption
+from ui.entry import NamedEntry
+from ui.form import Form
 from functools import partial
-from generate_password import GeneratePassword
-from master_dialog import MasterDialogInit, MasterDialogChange, MasterDialogCheck
-from table_view import TableView
+from ui.generate_password import GeneratePassword
+from ui.master_dialog import MasterDialogInit, MasterDialogChange, MasterDialogCheck
+from ui.table_view import TableView
 from tkinter import ttk
 from ttkthemes import ThemedTk
 
