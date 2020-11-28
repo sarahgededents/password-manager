@@ -41,7 +41,8 @@ def number_results(target):
         charsets.append(string.punctuation)
 
     alphabet = "".join(charsets)
-
+    if not alphabet:
+        return 0
     n = 0
     for length in range(len(target)):
         n += multicomb(len(alphabet), length) * math.factorial(length)
